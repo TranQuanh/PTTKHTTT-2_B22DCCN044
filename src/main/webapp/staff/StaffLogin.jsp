@@ -86,7 +86,7 @@
             margin-top: 10px;
             border: none;
             color: #fff;
-            background-color: #007bff;
+            background-color: #0099cc;
             cursor: pointer;
             border-radius: 6px;
             font-size: 16px;
@@ -95,7 +95,7 @@
         }
 
         .btn-login:hover {
-            background-color: #0069d9;
+            background-color: #0077aa;
         }
 
         .btn-login:active {

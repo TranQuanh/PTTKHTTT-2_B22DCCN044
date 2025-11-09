@@ -5,7 +5,12 @@
 <head>
     <title>Identify Reader</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f5f8fa; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f8fa;
+            margin: 0;
+            padding: 0;
+        }
         .container {
             background-color: white;
             padding: 25px 35px;
@@ -15,15 +20,60 @@
             margin: 50px auto;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
-        h2 { text-align: center; margin-bottom: 20px; }
-        .search-container { text-align: center; margin-bottom: 20px; }
-        input[type="text"] { padding: 8px; width: 250px; font-size: 14px; margin-right: 10px; }
-        button { padding: 8px 20px; background-color: #0099cc; color: white; border: none; cursor: pointer; border-radius: 4px; }
-        button:hover { background-color: #0077aa; }
-        table { border-collapse: collapse; width: 100%; margin-top: 25px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        .click-btn { color: #007bff; cursor: pointer; text-decoration: underline; }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 250px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 20px;
+            background-color: #0099cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #0077aa;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 25px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .click-btn {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .footer-buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .back-btn {
+            background-color: #999;
+        }
+        .back-btn:hover {
+            background-color: #777;
+        }
     </style>
 </head>
 <body>
@@ -67,13 +117,27 @@
     <c:if test="${not empty error}">
         <p style="text-align:center; color:red;">${error}</p>
     </c:if>
+
+    <!-- Nút quay lại -->
+    <div class="footer-buttons">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+    </div>
 </div>
 
-</body>
 <script>
-    document.querySelector('.click-btn').addEventListener('click', function() {
-        // Gọi servlet để lưu Reader vào session rồi sang BorrowList.jsp
-        window.location.href = '${pageContext.request.contextPath}/reader?action=choose';
-    });
+    // Khi ấn Click
+    const clickBtn = document.querySelector('.click-btn');
+    if (clickBtn) {
+        clickBtn.addEventListener('click', function() {
+            window.location.href = '${pageContext.request.contextPath}/reader?action=choose';
+        });
+    }
+
+    // Khi ấn nút quay lại
+    function goBack() {
+        window.history.back();
+    }
 </script>
+
+</body>
 </html>

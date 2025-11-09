@@ -1,3 +1,4 @@
+<%@ page import="com.example.librarysystem.model.Reader" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html>
@@ -43,8 +44,8 @@
   <div class="title">register reader card information</div>
 
   <%
-    com.example.librarysystem.model.Reader infoReader =
-            (com.example.librarysystem.model.Reader) session.getAttribute("infoReader");
+    Reader infoReader =
+            (Reader) session.getAttribute("infoReader");
   %>
 
   <div class="info-line">name : <b><%= infoReader.getFullName() %></b></div>

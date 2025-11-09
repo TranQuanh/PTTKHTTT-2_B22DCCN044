@@ -4,6 +4,7 @@ public class FineDetail {
 
     private String id;
     private String note;
+    private int quantity;
     private Fine fine;
 
     public FineDetail() {
@@ -17,6 +18,14 @@ public class FineDetail {
 
     public String getId() {
         return id;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 
     public void setId(String id) {

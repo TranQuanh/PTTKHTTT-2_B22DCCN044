@@ -1,6 +1,7 @@
 package com.example.librarysystem.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class LoanItem {
 
@@ -20,7 +21,8 @@ public class LoanItem {
         this.dueDate = dueDate;
         this.copy = copy;
     }
-
+    private static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     public String getId() {
         return id;
     }
@@ -32,7 +34,10 @@ public class LoanItem {
     public LocalDateTime getLoanDate() {
         return loanDate;
     }
-
+    public String getFormattedLoanDate() {
+        if (this.loanDate == null) return "";
+        return this.loanDate.format(FORMATTER);
+    }
     public void setLoanDate(LocalDateTime loanDate) {
         this.loanDate = loanDate;
     }
@@ -52,6 +57,11 @@ public class LoanItem {
 
     public void setCopy(Copy copy) {
         this.copy = copy;
+    }
+
+    public String getFormattedDueDate() {
+        if (this.dueDate == null) return "";
+        return this.dueDate.format(FORMATTER);
     }
 
 }

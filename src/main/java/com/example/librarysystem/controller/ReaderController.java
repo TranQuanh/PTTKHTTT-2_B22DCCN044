@@ -50,7 +50,6 @@ public class ReaderController extends HttpServlet {
         Reader reader = readerDAO.findReaderById(readerId);
 
         if (reader != null) {
-            request.setAttribute("reader", reader);
             HttpSession session = request.getSession();
             session.setAttribute("reader", reader);
         } else {
@@ -62,6 +61,7 @@ public class ReaderController extends HttpServlet {
     private void doChooseReader(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
+
         // Lấy reader đã tìm được từ attribute request (hoặc session cũ)
         Object reader = request.getAttribute("reader");
         if (reader == null) {
@@ -70,7 +70,9 @@ public class ReaderController extends HttpServlet {
 
         if (reader != null) {
             session.setAttribute("reader", reader); // lưu vào session
-            response.sendRedirect("staff/BorrowList.jsp");
+
+            // ✅ Gọi servlet LoanItemController để hiển thị danh sách Borrow List
+            response.sendRedirect(request.getContextPath() + "/loanItem?action=listByReader");
         } else {
             response.sendRedirect("staff/FindReader.jsp");
         }

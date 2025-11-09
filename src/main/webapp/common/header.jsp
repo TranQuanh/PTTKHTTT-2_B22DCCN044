@@ -9,7 +9,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    background-color: #005b96;
+    background-color: #0077aa;
     color: #ffffff;
     text-align: center;
     padding: 20px 0;

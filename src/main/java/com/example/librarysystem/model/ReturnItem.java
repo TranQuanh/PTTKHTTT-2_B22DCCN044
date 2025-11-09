@@ -1,6 +1,7 @@
 package com.example.librarysystem.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,8 @@ public class ReturnItem {
         this.returnDate = returnDate;
         this.loanItem = loanItem;
     }
+    private static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String getId() {
         return id;
@@ -33,7 +36,10 @@ public class ReturnItem {
     public LocalDateTime getReturnDate() {
         return returnDate;
     }
-
+    public String getFormattedReturnDate() {
+        if (this.returnDate == null) return "";
+        return this.returnDate.format(FORMATTER);
+    }
     public void setReturnDate(LocalDateTime returnDate) {
         this.returnDate = returnDate;
     }

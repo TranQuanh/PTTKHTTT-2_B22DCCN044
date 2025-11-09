@@ -45,11 +45,11 @@
     }
 
     .btn-blue {
-      background-color: #0097db;
+      background-color: #0099cc;
     }
 
     .btn-blue:hover {
-      background-color: #007bb8;
+      background-color: #0077aa;
     }
 
     .btn-red {
