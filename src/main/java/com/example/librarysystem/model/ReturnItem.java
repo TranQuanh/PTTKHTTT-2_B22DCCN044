@@ -24,7 +24,11 @@ public class ReturnItem {
     }
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("HH:mm:ss, dd/MM/yyyy");
 
+    private static final DateTimeFormatter DATE_ONLY_FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
     public String getId() {
         return id;
     }
@@ -44,8 +48,13 @@ public class ReturnItem {
         this.returnDate = returnDate;
     }
 
+    public String getDisplayReturnDateTime() {
+        return returnDate != null ? returnDate.format(TIME_FORMATTER) : "---";
+    }
 
-
+    public String getDisplayReturnDate() {
+        return returnDate != null ? returnDate.format(DATE_ONLY_FORMATTER) : "---";
+    }
     public LoanItem getLoanItem() {
         return loanItem;
     }

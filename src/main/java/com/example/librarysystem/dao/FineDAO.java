@@ -26,7 +26,7 @@ public class FineDAO {
             if (rs.next()) {
                 Fine fine = new Fine();
                 fine.setId(rs.getString("id"));
-                fine.setAmount(rs.getDouble("amount"));
+                fine.setAmount(rs.getFloat("amount"));
                 fine.setReason(rs.getString("reason"));
                 fine.setType(rs.getString("type"));
                 return fine;
@@ -49,7 +49,7 @@ public class FineDAO {
             while (rs.next()) {
                 Fine fine = new Fine();
                 fine.setId(rs.getString("id"));
-                fine.setAmount(rs.getDouble("amount"));
+                fine.setAmount(rs.getFloat("amount"));
                 fine.setReason(rs.getString("reason"));
                 fine.setType(rs.getString("type"));
                 damageFines.add(fine);

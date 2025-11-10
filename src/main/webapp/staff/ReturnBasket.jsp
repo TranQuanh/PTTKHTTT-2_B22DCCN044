@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -106,6 +107,26 @@
       text-align: right;
       margin-top: 15px;
     }
+    /* Style mới cho tổng tiền */
+    .total-summary {
+      text-align: right;
+      font-weight: bold;
+      padding-top: 10px;
+      border-top: 1px solid #ccc;
+      margin-top: 10px;
+      font-size: 1.1em;
+      color: #333;
+    }
+    .grand-total-box {
+      background-color: #d1ecf1; /* Light blue background */
+      padding: 15px;
+      border: 1px solid #bee5eb;
+      border-radius: 5px;
+      font-size: 1.2em;
+      font-weight: bold;
+      text-align: right;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -133,11 +154,32 @@
 
   <h3 style="text-align:center;">Danh sách tài liệu được chọn để trả</h3>
 
+  <c:set var="grandTotalFine" value="0" />
+
   <c:if test="${empty sessionScope.returnItems}">
     <p style="text-align:center;">Không có tài liệu nào được chọn để trả.</p>
   </c:if>
 
   <c:forEach var="item" items="${sessionScope.returnItems}">
+    <c:set var="itemTotalFine" value="0" />
+    <c:set var="lateFineAmount" value="0" />
+    <c:set var="damageFineAmount" value="0" />
+
+    <%-- 1. Tính toán tổng tiền phạt cho item hiện tại --%>
+    <c:forEach var="fd" items="${item.fineDetails}">
+      <c:set var="currentFine" value="${fd.fine.amount * fd.quantity}" />
+      <c:set var="itemTotalFine" value="${itemTotalFine + currentFine}" />
+      <c:if test="${fd.fine.type eq 'late'}">
+        <c:set var="lateFineAmount" value="${lateFineAmount + currentFine}" />
+      </c:if>
+      <c:if test="${fd.fine.type eq 'damage'}">
+        <c:set var="damageFineAmount" value="${damageFineAmount + currentFine}" />
+      </c:if>
+    </c:forEach>
+
+    <%-- 2. Cộng vào Tổng tiền toàn bộ --%>
+    <c:set var="grandTotalFine" value="${grandTotalFine + itemTotalFine}" />
+
     <div class="fine-section">
       <table>
         <tr>
@@ -178,8 +220,8 @@
               <td>${fd.fine.type}</td>
               <td>${fd.note}</td>
               <td>${fd.quantity}</td>
-              <td>${fd.fine.amount}</td>
-              <td>${fd.fine.amount * fd.quantity}</td>
+              <td><fmt:formatNumber value="${fd.fine.amount}" type="number" maxFractionDigits="0" /></td>
+              <td><fmt:formatNumber value="${fd.fine.amount * fd.quantity}" type="number" maxFractionDigits="0" /></td>
             </tr>
           </c:if>
         </c:forEach>
@@ -213,8 +255,8 @@
               <td>${fd.fine.type}</td>
               <td>${fd.note}</td>
               <td>${fd.quantity}</td>
-              <td>${fd.fine.amount}</td>
-              <td>${fd.fine.amount * fd.quantity}</td>
+              <td><fmt:formatNumber value="${fd.fine.amount}" type="number" maxFractionDigits="0" /></td>
+              <td><fmt:formatNumber value="${fd.fine.amount * fd.quantity}" type="number" maxFractionDigits="0" /></td>
             </tr>
           </c:if>
         </c:forEach>
@@ -224,6 +266,14 @@
         </tbody>
       </table>
 
+        <%-- ✅ HIỂN THỊ TỔNG TIỀN PHẠT CHO MỖI ITEM --%>
+      <div class="total-summary">
+        Tổng tiền phạt cho sách này:
+        <span style="color: #dc3545;">
+              <fmt:formatNumber value="${itemTotalFine}" type="number" maxFractionDigits="0" /> VND
+          </span>
+      </div>
+
       <div class="delete-container">
         <button class="delete-btn" onclick="deleteItem('${item.loanItem.id}')">Xóa Return Item</button>
       </div>
@@ -231,15 +281,30 @@
     </div>
   </c:forEach>
 
+  <%-- ✅ HIỂN THỊ TỔNG CỘNG TOÀN BỘ --%>
+  <c:if test="${not empty sessionScope.returnItems}">
+    <div class="grand-total-box">
+      TỔNG CỘNG TOÀN BỘ TIỀN PHẠT:
+      <span style="color: #dc3545; font-size: 1.1em;">
+              <fmt:formatNumber value="${grandTotalFine}" type="number" maxFractionDigits="0" /> VND
+          </span>
+    </div>
+  </c:if>
+
+
   <div style="text-align:center; margin-top: 25px;">
-    <button class="action-btn" onclick="calculateFine()">Tính tiền phạt</button>
+    <%-- ✅ SỬA HÀM confirm() để gọi logic tính toán sau đó chuyển sang Invoice --%>
+    <button class="action-btn" onclick="confirmReturnToInvoice()">Tính và Xác nhận (Tới Hóa đơn)</button>
   </div>
 </div>
 
 <script>
-  function calculateFine() {
-    window.location.href = '${pageContext.request.contextPath}/fine?action=calculateLateFine';
+  // ✅ Đổi tên hàm để rõ ràng hơn
+  function confirmReturnToInvoice() {
+    // Gọi Controller để tính toán phạt trễ hạn (và sau đó chuyển sang ReturnInvoice.jsp)
+    window.location.href = '${pageContext.request.contextPath}/staff/ReturnInvoice.jsp';
   }
+
 
   function deleteItem(loanItemId) {
     fetch('${pageContext.request.contextPath}/returnItem?action=choose&loanItemId=' + loanItemId)
