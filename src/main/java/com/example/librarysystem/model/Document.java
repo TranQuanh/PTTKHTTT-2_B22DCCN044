@@ -1,5 +1,6 @@
 package com.example.librarysystem.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Document {
@@ -8,14 +9,14 @@ public class Document {
     private String title;
     private String author;
     private String publisher;
-    private LocalDateTime publishDate;
+    private LocalDate publishDate;
     private String type;
 
     public Document() {
     }
 
     public Document(String id, String title, String author, String publisher,
-                    LocalDateTime publishDate, String type) {
+                    LocalDate publishDate, String type) {
         this.id = id;
         this.title = title;
         this.author = author;
@@ -56,11 +57,11 @@ public class Document {
         this.publisher = publisher;
     }
 
-    public LocalDateTime getPublishDate() {
+    public LocalDate getPublishDate() {
         return publishDate;
     }
 
-    public void setPublishDate(LocalDateTime publishDate) {
+    public void setPublishDate(LocalDate publishDate) {
         this.publishDate = publishDate;
     }
 

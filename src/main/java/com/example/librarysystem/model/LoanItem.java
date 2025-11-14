@@ -6,17 +6,19 @@ import java.time.format.DateTimeFormatter;
 public class LoanItem {
 
     private String id;
+    private String status;
+    private Copy copy;
     private LocalDateTime loanDate;
     private LocalDateTime dueDate;
 
-    private Copy copy;
 
     public LoanItem() {
     }
 
-    public LoanItem(String id, LocalDateTime loanDate, LocalDateTime dueDate,
+    public LoanItem(String id,String status, LocalDateTime loanDate, LocalDateTime dueDate,
                      Copy copy) {
         this.id = id;
+        this.status = status;
         this.loanDate = loanDate;
         this.dueDate = dueDate;
         this.copy = copy;
@@ -64,4 +66,11 @@ public class LoanItem {
         return this.dueDate.format(FORMATTER);
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

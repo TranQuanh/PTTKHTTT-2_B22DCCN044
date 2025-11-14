@@ -47,7 +47,7 @@ public class LoanItemDAO {
                         rs.getString("author"),
                         rs.getString("publisher"),
                         rs.getTimestamp("publishDate") != null
-                                ? rs.getTimestamp("publishDate").toLocalDateTime()
+                                ? rs.getDate("publishDate").toLocalDate()
                                 : null,
                         rs.getString("type")
                 );
@@ -58,12 +58,14 @@ public class LoanItemDAO {
                         rs.getString("barCode"),
                         rs.getString("condition"),
                         rs.getString("location"),
-                        doc
+                        doc,
+                        "Borrowed"
                 );
 
                 // LoanItem
                 LoanItem loanItem = new LoanItem(
                         rs.getString("loanItemId"),
+                        "Borrowed",
                         rs.getTimestamp("loanDate") != null
                                 ? rs.getTimestamp("loanDate").toLocalDateTime()
                                 : null,

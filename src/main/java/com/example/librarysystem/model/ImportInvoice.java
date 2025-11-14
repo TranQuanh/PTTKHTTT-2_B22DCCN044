@@ -9,22 +9,23 @@ public class ImportInvoice {
     private String id;
     private LocalDateTime importDate;
     private String status;
-
     private Staff staff;
     private Supplier supplier;
 
-    // OneToMany
     private List<ImportItem> importItems = new ArrayList<>();
+    private float totalAmount;
 
     public ImportInvoice() {
     }
 
-    public ImportInvoice(String id, LocalDateTime importDate, String status, Staff staff, Supplier supplier) {
+    public ImportInvoice(String id, LocalDateTime importDate, String status, Staff staff, Supplier supplier, List<ImportItem> importItems, float totalAmount) {
         this.id = id;
         this.importDate = importDate;
         this.status = status;
         this.staff = staff;
         this.supplier = supplier;
+        this.importItems = importItems;
+        this.totalAmount = totalAmount;
     }
 
     public String getId() {
@@ -75,10 +76,11 @@ public class ImportInvoice {
         this.importItems = importItems;
     }
 
-    // helper method
-    public void addImportItem(ImportItem item) {
-        if(!importItems.contains(item)) {
-            importItems.add(item);
-        }
+    public float getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(float totalAmount) {
+        this.totalAmount = totalAmount;
     }
 }

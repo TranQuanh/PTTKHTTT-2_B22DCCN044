@@ -73,7 +73,7 @@ public class ReturnItemController extends HttpServlet {
                 (List<ReturnItem>) session.getAttribute("returnItems");
 
         if (returnItems == null) {
-            returnItems = new ArrayList<>();
+            returnItems = new ArrayList<ReturnItem>();
         }
 
         // ... (Phần kiểm tra đã tồn tại) ...
@@ -94,7 +94,7 @@ public class ReturnItemController extends HttpServlet {
             ReturnItem newReturn = new ReturnItem();
             newReturn.setReturnDate(LocalDateTime.now());
 
-            // 🔑 GÁN LOANITEM ĐẦY ĐỦ 🔑
+
             newReturn.setLoanItem(fullLoanItem);
 
             returnItems.add(newReturn);

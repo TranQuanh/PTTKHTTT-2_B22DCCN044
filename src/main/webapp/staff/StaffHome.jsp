@@ -79,7 +79,7 @@
   <h2>Staff home page</h2>
 
   <a href="<%=request.getContextPath()%>/staff/FindReader.jsp" class="btn btn-blue">
-    Receive & return documents
+    Return documents
   </a>
 
   <a href="<%=request.getContextPath()%>/staff?action=logout" class="btn btn-red">

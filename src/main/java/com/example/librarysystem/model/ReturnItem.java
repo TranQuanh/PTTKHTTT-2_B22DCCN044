@@ -8,9 +8,8 @@ import java.util.List;
 public class ReturnItem {
 
     private String id;
-    private LocalDateTime returnDate;
     private LoanItem loanItem;
-
+    private LocalDateTime returnDate;
     private List<FineDetail> fineDetails = new ArrayList<>();
 
     public ReturnItem() {

@@ -4,14 +4,15 @@ public class ImportItem {
 
     private String id;
     private Copy copy;
+    private float amount;
 
     public ImportItem() {
     }
 
-    public ImportItem(String id, Copy copy) {
+    public ImportItem(String id, Copy copy, float amount) {
         this.id = id;
         this.copy = copy;
-
+        this.amount = amount;
     }
 
     public String getId() {
@@ -30,7 +31,11 @@ public class ImportItem {
         this.copy = copy;
     }
 
+    public float getAmount() {
+        return amount;
+    }
 
-
-
+    public void setAmount(float amount) {
+        this.amount = amount;
+    }
 }

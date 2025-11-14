@@ -6,10 +6,11 @@ import java.util.List;
 public class ReturnInvoice {
 
     private String id;
-    private Reader reader;
     private Staff staff;
-
     private List<ReturnItem> returnItems = new ArrayList<>();
+    private Reader reader;
+    private String status;
+    private float totalAmount;
 
     public ReturnInvoice() {
     }
@@ -57,5 +58,21 @@ public class ReturnInvoice {
         if (!returnItems.contains(item)) {
             returnItems.add(item);
         }
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public float getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(float totalAmount) {
+        this.totalAmount = totalAmount;
     }
 }

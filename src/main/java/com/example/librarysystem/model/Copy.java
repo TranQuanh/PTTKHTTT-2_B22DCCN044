@@ -7,16 +7,18 @@ public class Copy {
     private String condition;
     private String location;
     private Document document;
+    private String status;
 
     public Copy() {
     }
 
-    public Copy(String id, String barCode, String condition, String location, Document document) {
+    public Copy(String id, String barCode, String condition, String location, Document document, String status) {
         this.id = id;
         this.barCode = barCode;
         this.condition = condition;
         this.location = location;
         this.document = document;
+        this.status = status;
     }
 
     public String getId() {
@@ -57,5 +59,13 @@ public class Copy {
 
     public void setDocument(Document document) {
         this.document = document;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

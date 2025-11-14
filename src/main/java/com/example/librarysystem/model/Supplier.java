@@ -6,18 +6,18 @@ public class Supplier {
     private String name;
     private String taxCode;
     private String email;
-    private String phone;
+    private String phoneNumber;
     private String address;
 
     public Supplier() {
     }
 
-    public Supplier(String id, String name, String taxCode, String email, String phone, String address) {
+    public Supplier(String id, String name, String taxCode, String email, String phoneNumber, String address) {
         this.id = id;
         this.name = name;
         this.taxCode = taxCode;
         this.email = email;
-        this.phone = phone;
+        this.phoneNumber = phoneNumber;
         this.address = address;
     }
 
@@ -54,11 +54,11 @@ public class Supplier {
     }
 
     public String getPhone() {
-        return phone;
+        return phoneNumber;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setPhone(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String getAddress() {

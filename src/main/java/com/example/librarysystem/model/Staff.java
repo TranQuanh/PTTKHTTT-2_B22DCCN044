@@ -7,7 +7,7 @@ public class Staff extends Member {
     private String staffId;
     private Integer salary;
     private String staffRole;
-    private LocalDateTime hireDate;
+    private LocalDate hireDate;
 
     public Staff() {
         super();
@@ -16,7 +16,7 @@ public class Staff extends Member {
     public Staff(String id, String username, String password, String address, LocalDate date,
                  String email, String phoneNumber, String role, String note, String fullName,
                  String staffId,
-                 Integer salary, String staffRole, LocalDateTime hireDate) {
+                 Integer salary, String staffRole, LocalDate hireDate) {
         super(id, username, password, address, date, email, phoneNumber, role, note, fullName);
         this.salary = salary;
         this.staffRole = staffRole;
@@ -47,11 +47,11 @@ public class Staff extends Member {
         this.staffRole = staffRole;
     }
 
-    public LocalDateTime getHireDate() {
+    public LocalDate getHireDate() {
         return hireDate;
     }
 
-    public void setHireDate(LocalDateTime hireDate) {
+    public void setHireDate(LocalDate hireDate) {
         this.hireDate = hireDate;
     }
 }

@@ -8,7 +8,7 @@ public class Member {
     private String username;
     private String password;
     private String address;
-    private LocalDate date;
+    private LocalDate dateOfBirth;
     private String email;
     private String phoneNumber;
     private String role;
@@ -18,13 +18,13 @@ public class Member {
     public Member() {
     }
 
-    public Member(String memberId, String username, String password, String address, LocalDate date,
+    public Member(String memberId, String username, String password, String address, LocalDate dateOfBirth,
                   String email, String phoneNumber, String role, String note, String fullName) {
         this.memberId = memberId;
         this.username = username;
         this.password = password;
         this.address = address;
-        this.date = date;
+        this.dateOfBirth = dateOfBirth;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.role = role;
@@ -64,12 +64,12 @@ public class Member {
         this.address = address;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
 
     public String getEmail() {
