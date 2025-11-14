@@ -18,7 +18,7 @@ public class FineDAO {
 
     // Lấy duy nhất bản ghi Fine có type = 'late'
     public Fine getLateFine() {
-        String sql = "SELECT * FROM Fine WHERE type = 'late' LIMIT 1";
+        String sql = "SELECT id, amount, type, reason, unit, maxquantity FROM tblFine WHERE type = 'late' LIMIT 1";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -41,7 +41,7 @@ public class FineDAO {
 
     public List<Fine> getListDamageFine() {
         List<Fine> damageFines = new ArrayList<>();
-        String sql = "SELECT id, amount, type, reason FROM Fine WHERE type = 'damage'";
+        String sql = "SELECT id, amount, type, reason FROM tblFine WHERE type = 'damage'";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {

@@ -30,12 +30,12 @@ public class ReturnInvoiceDAO {
      */
     public boolean createReturnInvoice(ReturnInvoice invoice, String staffId) throws SQLException {
 
-        // SQL Dựa trên Schema chỉ có 3 cột: id, Readerid, Staffid
-        String INSERT_INVOICE = "INSERT INTO ReturnInvoice (id, Readerid, Staffid) VALUES (?, ?, ?)";
 
-        // Các bảng khác giữ nguyên:
-        String INSERT_RETURN_ITEM = "INSERT INTO ReturnItem (id, ReturnInvoiceid, LoanItemid, returnDate) VALUES (?, ?, ?, ?)";
-        String INSERT_FINE_DETAIL = "INSERT INTO FineDetail (id, Fineid, ReturnItemid, note, quantity) VALUES (?, ?, ?, ?, ?)";
+        String INSERT_INVOICE = "INSERT INTO tblReturnInvoice (id, readerid, staffid) VALUES (?, ?, ?)";
+
+        String INSERT_RETURN_ITEM = "INSERT INTO tblReturnItem (id, returninvoiceid, loanitemid, returndate) VALUES (?, ?, ?, ?)";
+
+        String INSERT_FINE_DETAIL = "INSERT INTO tblFineDetail (id, fineid, returnitemid, note, quantity) VALUES (?, ?, ?, ?, ?)";
 
         boolean success = false;
         String invoiceId = "RI-" + UUID.randomUUID().toString().substring(0, 8);

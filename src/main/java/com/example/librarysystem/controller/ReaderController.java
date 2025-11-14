@@ -114,7 +114,7 @@ public class ReaderController extends HttpServlet {
 
         // parse dob (LocalDate)
         if (dobStr != null && !dobStr.isEmpty()) {
-            reader.setDate(LocalDate.parse(dobStr));
+            reader.setDateOfBirth(LocalDate.parse(dobStr));
         }
 
         // Kiểm tra validate

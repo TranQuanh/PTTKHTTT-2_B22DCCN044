@@ -14,8 +14,8 @@ import java.util.UUID;
 public class ReaderDAO {
 
     private final Connection connection;
-    String sql_check_username = "SELECT 1 FROM Member WHERE username = ? LIMIT 1";
-    String sql_check_email ="SELECT 1 FROM Member WHERE email = ? LIMIT 1";
+    String sql_check_username = "SELECT 1 FROM tblMember WHERE username = ? LIMIT 1";
+    String sql_check_email ="SELECT 1 FROM tblMember WHERE email = ? LIMIT 1";
     public ReaderDAO(Connection connection) {
         this.connection = connection;
     }
@@ -57,10 +57,10 @@ public class ReaderDAO {
 
 
     public boolean createReader(Reader reader) {
-        String insertMemberSQL = "INSERT INTO Member(id, username, password, address, date, email, phonenumber, role, note, fullName) " +
+        String insertMemberSQL = "INSERT INTO tblMember(memberid, username, password, address, dateofbirth, email, phonenumber, role, note, fullname) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        String insertReaderSQL = "INSERT INTO Reader(id, Memberid, validFrom, validTo, status, qrCode) " +
+        String insertReaderSQL = "INSERT INTO tblReader(readerid, memberid, validfrom, validto, status, qrCode) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
 
         Connection conn = null;
@@ -83,11 +83,11 @@ public class ReaderDAO {
             psMember.setString(2, reader.getUsername());
             psMember.setString(3, reader.getPassword());
             psMember.setString(4, reader.getAddress());
-            psMember.setDate(5, java.sql.Date.valueOf(reader.getDate()));
+            psMember.setDate(5, java.sql.Date.valueOf(reader.getDateOfBirth()));
             psMember.setString(6, reader.getEmail());
             psMember.setString(7, reader.getPhoneNumber());
-            psMember.setString(8, "customer");
-            psMember.setString(9, "");
+            psMember.setString(8, "reader");
+            psMember.setString(9, null);
             psMember.setString(10, fullName);
             psMember.executeUpdate();
 
@@ -123,16 +123,16 @@ public class ReaderDAO {
         }
     }
     public Reader findReaderById(String readerId) {
-        String sql = "SELECT r.readerId, m.fullName, r.status " +
-                "FROM Reader r JOIN Member m ON r.memberId = m.memberId " +
-                "WHERE r.readerId = ?";
+        String sql = "SELECT r.readerid, m.fullname, r.status " +
+                "FROM tblReader r JOIN tblMember m ON r.memberid = m.memberid " +
+                "WHERE r.readerid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, readerId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     Reader reader = new Reader();
-                    reader.setReaderId(rs.getString("readerId"));
-                    reader.setFullName(rs.getString("fullName"));
+                    reader.setReaderId(rs.getString("readerid"));
+                    reader.setFullName(rs.getString("fullname"));
                     reader.setStatus(rs.getString("status"));
                     return reader;
                 }

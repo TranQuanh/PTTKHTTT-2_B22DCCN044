@@ -6,6 +6,8 @@ import java.sql.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
+
 public class StaffDAO {
     private final Connection connection;
 
@@ -15,11 +17,11 @@ public class StaffDAO {
     public Staff login(String username, String password) {
         String sql = """
             SELECT 
-                m.memberId, m.username, m.password, m.address, m.date, 
-                m.email, m.phonenumber, m.role, m.note, m.fullName,
-                s.staffId, s.salary, s.staffRole, s.hireDate
-            FROM Member m
-            JOIN Staff s ON m.memberId = s.memberId
+                m.memberid, m.username, m.password, m.address, m.dateofbirth, 
+                m.email, m.phonenumber, m.role, m.note, m.fullname,
+                s.staffid, s.salary, s.staffrole, s.hiredate
+            FROM tblMember m
+            JOIN tblStaff s ON m.memberid = s.memberid
             WHERE m.username = ? AND m.password = ? AND m.role = 'staff'
         """;
 
@@ -32,30 +34,37 @@ public class StaffDAO {
                     Staff staff = new Staff();
 
                     // --- Member fields ---
-                    staff.setMemberId(rs.getString("memberId"));
+                    staff.setMemberId(rs.getString("memberid"));
                     staff.setUsername(rs.getString("username"));
                     staff.setPassword(rs.getString("password"));
                     staff.setAddress(rs.getString("address"));
 
-                    Date date = rs.getDate("date");
-                    if (date != null) {
-                        staff.setDate(date.toLocalDate());
+                    // Sửa tên cột từ "date" thành "dateofbirth"
+                    Date dateOfBirth = rs.getDate("dateofbirth");
+                    if (dateOfBirth != null) {
+                        // Giả định Setter của Member nhận LocalDate
+                        staff.setDateOfBirth(dateOfBirth.toLocalDate());
                     }
 
                     staff.setEmail(rs.getString("email"));
                     staff.setPhoneNumber(rs.getString("phonenumber"));
                     staff.setRole(rs.getString("role"));
                     staff.setNote(rs.getString("note"));
-                    staff.setFullName(rs.getString("fullName"));
+                    staff.setFullName(rs.getString("fullname"));
 
                     // --- Staff fields ---
-                    staff.setStaffId(rs.getString("staffId"));
+                    staff.setStaffId(rs.getString("staffid"));
                     staff.setSalary(rs.getInt("salary"));
-                    staff.setStaffRole(rs.getString("staffRole"));
+                    staff.setStaffRole(rs.getString("staffrole"));
 
-                    Date hireDate = rs.getDate("hireDate");
-                    if (hireDate != null) {
-                        staff.setHireDate(hireDate.toLocalDate().atStartOfDay());
+                    // Cập nhật: Sử dụng rs.getDate() và toLocalDate() để khớp với mô hình Staff
+                    Date hireDateSql = rs.getDate("hiredate");
+                    if (hireDateSql != null) {
+                        // Setter của Staff nhận LocalDate
+                        staff.setHireDate(hireDateSql.toLocalDate());
+                    } else {
+                        // Nếu giá trị là NULL trong DB, set HireDate là null
+                        staff.setHireDate(null);
                     }
 
                     return staff;

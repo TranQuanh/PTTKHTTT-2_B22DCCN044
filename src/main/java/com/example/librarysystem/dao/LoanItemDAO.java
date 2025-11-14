@@ -26,13 +26,13 @@ public class LoanItemDAO {
             SELECT li.id AS loanItemId, li.loanDate, li.dueDate,
                    c.id AS copyId, c.barCode, c.condition, c.location,
                    d.id AS docId, d.title, d.author, d.publisher, d.publishDate, d.type
-            FROM LoanItem li
-                     JOIN Loan l ON li.Loanid = l.id
-                     JOIN Reader r ON l.Readerid = r.readerId
-                     JOIN Copy c ON li.Copyid = c.id
-                     JOIN Document d ON c.Documentid = d.id
-            WHERE r.readerId = ?
-              AND li.id NOT IN (SELECT LoanItemid FROM ReturnItem)
+            FROM tblLoanItem li
+                     JOIN tblLoan l ON li.loanid = l.id
+                     JOIN tblReader r ON l.readerid = r.readerid
+                     JOIN tblCopy c ON li.copyid = c.id
+                     JOIN tblDocument d ON c.documentid = d.id
+            WHERE r.readerid = ?
+              AND li.id NOT IN (SELECT loanItemid FROM tblReturnItem)
             """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
