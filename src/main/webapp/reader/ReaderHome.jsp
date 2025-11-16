@@ -67,13 +67,10 @@
   <div class="container">
     <h2>Reader Home</h2>
 
-    <form action="reader/RegisterCardForm.jsp">
+    <form action="<%=request.getContextPath()%>/reader/RegisterCardForm.jsp">
       <button class="btn" type="submit">Register reader card</button>
     </form>
 
-    <form action="login.jsp">
-      <button class="btn" type="submit">Login</button>
-    </form>
   </div>
 </div>
 

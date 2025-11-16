@@ -6,8 +6,6 @@ public class Fine {
     private float amount;
     private String type;
     private String reason;
-    private String unit;
-    private int maxQuantity;
 
     public Fine() {
     }
@@ -51,19 +49,4 @@ public class Fine {
         this.reason = reason;
     }
 
-    public String getUnit() {
-        return unit;
-    }
-
-    public void setUnit(String unit) {
-        this.unit = unit;
-    }
-
-    public int getMaxQuantity() {
-        return maxQuantity;
-    }
-
-    public void setMaxQuantity(int maxQuantity) {
-        this.maxQuantity = maxQuantity;
-    }
 }

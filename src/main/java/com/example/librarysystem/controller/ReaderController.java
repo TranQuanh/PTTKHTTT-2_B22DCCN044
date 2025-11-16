@@ -35,9 +35,6 @@ public class ReaderController extends HttpServlet {
             case "search":
                 doFindReader(request, response);
                 break;
-            case "choose":
-                doChooseReader(request, response);
-                break;
             default:
                 response.sendRedirect("staff/FindReader.jsp");
         }
@@ -46,7 +43,8 @@ public class ReaderController extends HttpServlet {
     private void doFindReader(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String readerId = request.getParameter("readerId");
+        String readerId = request.getParameter("inReaderId");
+        //DAO
         Reader reader = readerDAO.findReaderById(readerId);
 
         if (reader != null) {
@@ -58,25 +56,7 @@ public class ReaderController extends HttpServlet {
 
         request.getRequestDispatcher("staff/FindReader.jsp").forward(request, response);
     }
-    private void doChooseReader(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession();
 
-        // Lấy reader đã tìm được từ attribute request (hoặc session cũ)
-        Object reader = request.getAttribute("reader");
-        if (reader == null) {
-            reader = session.getAttribute("reader");
-        }
-
-        if (reader != null) {
-            session.setAttribute("reader", reader); // lưu vào session
-
-            // ✅ Gọi servlet LoanItemController để hiển thị danh sách Borrow List
-            response.sendRedirect(request.getContextPath() + "/loanItem?action=listByReader");
-        } else {
-            response.sendRedirect("staff/FindReader.jsp");
-        }
-    }
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -96,13 +76,13 @@ public class ReaderController extends HttpServlet {
             throws ServletException, IOException {
 
         // Lấy dữ liệu từ form
-        String fullName     = request.getParameter("fullName");
-        String username     = request.getParameter("username");
-        String password     = request.getParameter("password");
-        String email        = request.getParameter("email");
-        String address      = request.getParameter("address");
-        String phoneNumber  = request.getParameter("phoneNumber");
-        String dobStr       = request.getParameter("dob");
+        String fullName     = request.getParameter("inFullName");
+        String username     = request.getParameter("inUsername");
+        String password     = request.getParameter("inPassword");
+        String email        = request.getParameter("inEmail");
+        String address      = request.getParameter("inAddress");
+        String phoneNumber  = request.getParameter("inPhoneNumber");
+        String dobStr       = request.getParameter("inDOB");
 
         Reader reader = new Reader();
         reader.setFullName(fullName);
@@ -111,13 +91,10 @@ public class ReaderController extends HttpServlet {
         reader.setEmail(email);
         reader.setAddress(address);
         reader.setPhoneNumber(phoneNumber);
+        reader.setDateOfBirth(LocalDate.parse(dobStr));
 
-        // parse dob (LocalDate)
-        if (dobStr != null && !dobStr.isEmpty()) {
-            reader.setDateOfBirth(LocalDate.parse(dobStr));
-        }
 
-        // Kiểm tra validate
+        // Kiểm tra validate DAO
         Map<String, String> errors = readerDAO.checkValidate(reader);
 
         if (!errors.isEmpty()) {
@@ -143,22 +120,37 @@ public class ReaderController extends HttpServlet {
         HttpSession session = request.getSession();
         Reader reader = (Reader) session.getAttribute("infoReader");
 
-        if (reader == null) {
 
-            response.sendRedirect(request.getContextPath() + "/reader/RegisterCardForm.jsp");
-            return;
-        }
-
-        // Gọi DAO để insert
+        // DAO
         boolean success = readerDAO.createReader(reader);
 
         if (success) {
             session.removeAttribute("infoReader");
-            // chuyển đến trang kết quả
-            request.setAttribute("fullName", reader.getFullName());
-            request.setAttribute("phone", reader.getPhoneNumber());
+
+            // DAO
+            String readerId = reader.getReaderId();
+
+            //DAO
+            Reader fullReader = readerDAO.getReaderInfo(readerId);
+
+            if (fullReader != null) {
+                request.setAttribute("readerId", fullReader.getReaderId());
+                request.setAttribute("fullName", fullReader.getFullName());
+                request.setAttribute("username", fullReader.getUsername());
+                request.setAttribute("password", fullReader.getPassword());
+                request.setAttribute("qrCode", fullReader.getQrCode() != null ? fullReader.getQrCode() : "N/A");
+                request.setAttribute("phone", reader.getPhoneNumber());
+            }else {
+                request.setAttribute("readerId", readerId);
+                request.setAttribute("fullName", reader.getFullName());
+                request.setAttribute("username", reader.getUsername());
+                request.setAttribute("password", reader.getPassword());
+                request.setAttribute("phone", reader.getPhoneNumber());
+            }
+
             request.getRequestDispatcher("/reader/ResultRegistration.jsp")
                     .forward(request, response);
+
         } else {
             request.setAttribute("errorMessage", "Đăng ký thất bại (Lỗi hệ thống)!");
             request.setAttribute("infoReader", reader);

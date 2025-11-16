@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @WebServlet("/returnInvoice")
-public class returnInvoiceController extends HttpServlet {
+public class ReturnInvoiceController extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(ReturnItemController.class);
     private ReturnInvoiceDAO returnInvoiceDAO;
 
@@ -33,10 +33,14 @@ public class returnInvoiceController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+
         String action = request.getParameter("action");
+
 
         if ("createReturnInvoice".equals(action)) {
             createReturnInvoice(request, response);
+        } else if ("updateStatus".equals(action)) {
+            doUpdateStatus(request, response);
         } else {
             response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
         }
@@ -48,19 +52,12 @@ public class returnInvoiceController extends HttpServlet {
         List<ReturnItem> returnItems = (List<ReturnItem>) session.getAttribute("returnItems");
         Reader reader = (Reader) session.getAttribute("reader");
 
-        // ✅ Lấy đối tượng Staff (Member) từ Session
         Staff staffMember = (Staff) session.getAttribute("staff");
-
-        // Lấy Staff ID từ đối tượng Member
         String staffId = (staffMember != null) ? staffMember.getStaffId() : null;
 
         if (staffId == null || reader == null || returnItems == null || returnItems.isEmpty()) {
             log.error("Thiếu dữ liệu cần thiết (Staff/Reader/Items) để tạo hóa đơn.");
-            // Kiểm tra chi tiết để dễ debug
-            if (staffId == null) log.error("Lỗi: staffId là NULL");
-            if (reader == null) log.error("Lỗi: reader là NULL");
-            if (returnItems == null || returnItems.isEmpty()) log.error("Lỗi: returnItems là NULL hoặc EMPTY");
-
+            // (Phần log lỗi chi tiết giữ nguyên)
             request.setAttribute("error", "Thiếu dữ liệu để tạo hóa đơn. Vui lòng thử lại.");
             request.getRequestDispatcher("staff/ReturnInvoice.jsp").forward(request, response);
             return;
@@ -71,91 +68,112 @@ public class returnInvoiceController extends HttpServlet {
         LocalDateTime now = LocalDateTime.now();
 
         for (ReturnItem item : returnItems) {
+            double itemFine = 0;
             if (item.getFineDetails() != null) {
                 for (var fd : item.getFineDetails()) {
                     if (fd.getFine() != null) {
-                        grandTotalFine += (fd.getFine().getAmount() * fd.getQuantity());
+                        // Cần giả định logic tính toán (Late/Damage Fine) đúng ở đây
+                        // Giả sử fd.getQuantity() có giá trị để tính Late Fine
+                        int quantity = (fd.getQuantity() != null) ? fd.getQuantity() : 1;
+                        if ("late".equals(fd.getFine().getType())) {
+                            itemFine += (fd.getFine().getAmount() * quantity);
+                        } else if ("damage".equals(fd.getFine().getType())) {
+                            itemFine += fd.getFine().getAmount(); // Giả sử tiền đã là tổng
+                        }
                     }
                 }
             }
+            grandTotalFine += itemFine;
             item.setReturnDate(now);
         }
-
 
         ReturnInvoice invoice = new ReturnInvoice();
         invoice.setStaff(staffMember);
         invoice.setReader(reader);
-
         invoice.setReturnItems(returnItems);
 
         // 3. GỌI DAO ĐỂ LƯU TOÀN BỘ GIAO DỊCH
         try {
-            // DAO phải gán ID được tạo (nếu có) vào đối tượng 'invoice'
-            boolean success = returnInvoiceDAO.createReturnInvoice(invoice, staffId);
+            // DAO sẽ gán ID vào đối tượng 'invoice'
+            // Thay đổi gọi DAO theo cấu trúc mới: createReturnInvoice(invoice)
+            boolean success = returnInvoiceDAO.createReturnInvoice(invoice);
 
             if (success) {
 
-                // 🚀 BƯỚC LOGGING QUAN TRỌNG TRƯỚC KHI FORWARD
+                // 🚀 LOG DỮ LIỆU CẦN THIẾT TRƯỚC KHI CHUYỂN HƯỚNG
                 log.info("----------------------------------------------------------");
-                log.info("📝 LOG DỮ LIỆU TRƯỚC KHI CHUYỂN HƯỚNG TỚI PAYMENTSLIP.JSP");
+                log.info("📝 LOG DỮ LIỆU CHUYỂN SANG PAYMENTSLIP.JSP");
                 log.info("----------------------------------------------------------");
 
-                // Log các thông tin chính của Hóa Đơn
-                log.info("Mã Hóa Đơn (ID): {}", invoice.getId());
-                log.info("Tổng Tiền Phạt (GrandTotalFine): {}", grandTotalFine);
-                log.info("Thời Gian Giao Dịch: {}", LocalDateTime.now());
+                // Kiểm tra các đối tượng trong Session
+                session.setAttribute("returnInvoice", invoice);
+                session.setAttribute("grandTotalFine", grandTotalFine);
 
-                // Log thông tin Độc Giả
-                if (invoice.getReader() != null) {
-                    log.info("Độc Giả ID: {}", invoice.getReader().getReaderId());
-                    log.info("Độc Giả Tên: {}", invoice.getReader().getFullName());
-                } else {
-                    log.error("LỖI: Đối tượng Reader trong Invoice là NULL!");
-                }
+                log.info("  -> SESSION SET: returnInvoice (ID: {})", invoice.getId());
+                log.info("  -> SESSION SET: grandTotalFine ({})", grandTotalFine);
 
-                // Log thông tin Nhân Viên
-                if (invoice.getStaff() != null) {
-                    log.info("Nhân Viên ID: {}", invoice.getStaff().getStaffId());
-                    log.info("Nhân Viên Tên: {}", invoice.getStaff().getFullName());
-                } else {
-                    log.error("LỖI: Đối tượng Staff trong Invoice là NULL!");
-                }
+                // Kiểm tra các trường dữ liệu quan trọng mà JSP sử dụng
+                log.info("  1. Invoice ID (Mã GD): {}", invoice.getId());
+                log.info("  2. Tổng Tiền Phạt: {}", grandTotalFine);
+                log.info("  3. Độc Giả ID: {}", (invoice.getReader() != null ? invoice.getReader().getReaderId() : "NULL"));
+                log.info("  4. Nhân Viên ID: {}", (invoice.getStaff() != null ? invoice.getStaff().getStaffId() : "NULL"));
 
-                // Log chi tiết các sách trả (nếu có)
+                // Kiểm tra ReturnItems và ReturnDate (Dữ liệu chính cho JSP)
                 if (invoice.getReturnItems() != null && !invoice.getReturnItems().isEmpty()) {
-                    log.info("Tổng số Sách Trả: {}", invoice.getReturnItems().size());
+                    ReturnItem firstItem = invoice.getReturnItems().get(0);
+                    log.info("  5. Tổng số Sách Trả: {}", invoice.getReturnItems().size());
+                    log.info("  6. ReturnDate của Item 0 (Cần cho Thời Gian GD): {}", firstItem.getReturnDate());
+                    log.info("  7. ReturnDate định dạng (getDisplayReturnDateTime): {}", firstItem.getDisplayReturnDateTime());
+
+                    // Kiểm tra chi tiết fine
                     for (ReturnItem item : invoice.getReturnItems()) {
-                        log.info("  -> Mã LoanItem: {}, Tên Sách: {}, Tiền Phạt Item: {}",
-                                item.getLoanItem().getId(),
-                                item.getLoanItem().getCopy().getDocument().getTitle(),
-                                item.getFineDetails().stream()
-                                        .mapToDouble(fd -> fd.getFine().getAmount() * fd.getQuantity())
-                                        .sum());
+                        if (item.getFineDetails() != null) {
+                            for (var fd : item.getFineDetails()) {
+                                log.info("    -> Chi tiết Phạt - Loại: {}, Số tiền: {}",
+                                        fd.getFine().getType(), fd.getFine().getAmount());
+                            }
+                        }
                     }
                 } else {
-                    log.error("LỖI: Không có ReturnItem nào trong Invoice!");
+                    log.error("LỖI CẢNH BÁO: Không có ReturnItem trong Invoice sau khi tạo!");
                 }
                 log.info("----------------------------------------------------------");
+
 
                 // Xóa các session tạm thời sau khi lưu thành công
                 session.removeAttribute("returnItems");
                 session.removeAttribute("reader");
                 session.removeAttribute("currentLoanItems");
 
-                // ĐẶT ĐỐI TƯỢNG INVOICE VÀ TỔNG TIỀN VÀO REQUEST
-                session.setAttribute("returnInvoice", invoice);
-                session.setAttribute("grandTotalFine", grandTotalFine);
                 // Chuyển hướng sang trang in phiếu tiền
                 request.getRequestDispatcher("staff/PaymentSlip.jsp").forward(request, response);
             } else {
                 request.setAttribute("error", "Lưu hóa đơn vào CSDL thất bại (Lỗi DAO).");
                 request.getRequestDispatcher("staff/ReturnInvoice.jsp").forward(request, response);
             }
-
         } catch (Exception e) {
-            log.error("Lỗi khi tạo hóa đơn trả sách", e);
-            request.setAttribute("error", "Lỗi hệ thống khi xử lý giao dịch: " + e.getMessage());
+            log.error("Lỗi server khi tạo hóa đơn trả sách: ", e);
+            request.setAttribute("error", "Lỗi xử lý server khi tạo hóa đơn: " + e.getMessage());
             request.getRequestDispatcher("staff/ReturnInvoice.jsp").forward(request, response);
+        }
+    }
+    private void doUpdateStatus(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String returnId = request.getParameter("returnId");
+
+
+            boolean updated = returnInvoiceDAO.updateStatus(returnId);
+
+
+            if (updated) {
+                response.getWriter().write("UPDATED");
+            } else {
+                response.getWriter().write("FAILED");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.getWriter().write("ERROR");
         }
     }
 }

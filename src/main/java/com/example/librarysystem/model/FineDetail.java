@@ -4,7 +4,7 @@ public class FineDetail {
 
     private String id;
     private String note;
-    private int quantity;
+    private Integer quantity;
     private Fine fine;
 
     public FineDetail() {
@@ -20,11 +20,11 @@ public class FineDetail {
         return id;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 

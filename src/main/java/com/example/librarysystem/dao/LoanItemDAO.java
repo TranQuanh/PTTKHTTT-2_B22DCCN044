@@ -19,7 +19,7 @@ public class LoanItemDAO {
     /**
      * Lấy danh sách LoanItem của Reader mà chưa có trong ReturnItem
      */
-    public List<LoanItem> getLoanItemsNotReturnedByReader(String readerId) {
+    public List<LoanItem> getLoanItemsByReader(String readerId) {
         List<LoanItem> list = new ArrayList<>();
 
         String sql = """

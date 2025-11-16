@@ -46,7 +46,7 @@ public class ReturnItemController extends HttpServlet {
             return;
         }
 
-        // ✅ BƯỚC SỬA ĐỔI: LẤY DANH SÁCH TỪ SESSION
+
         List<LoanItem> currentLoanItems =
                 (List<LoanItem>) session.getAttribute("currentLoanItems");
 
@@ -56,7 +56,7 @@ public class ReturnItemController extends HttpServlet {
             return;
         }
 
-        // ✅ BƯỚC SỬA ĐỔI: TÌM KIẾM LOANITEM ĐẦY ĐỦ BẰNG loanItemId
+
         LoanItem fullLoanItem = currentLoanItems.stream()
                 .filter(item -> item.getId() != null && item.getId().equals(loanItemId))
                 .findFirst()
@@ -68,19 +68,17 @@ public class ReturnItemController extends HttpServlet {
             return;
         }
 
-        // Lấy danh sách ReturnItem (đã có)
-        List<ReturnItem> returnItems =
-                (List<ReturnItem>) session.getAttribute("returnItems");
+
+        List<ReturnItem> returnItems =  (List<ReturnItem>) session.getAttribute("returnItems");
 
         if (returnItems == null) {
             returnItems = new ArrayList<ReturnItem>();
         }
 
-        // ... (Phần kiểm tra đã tồn tại) ...
+
         ReturnItem existing = null;
         for (ReturnItem item : returnItems) {
-            if (item.getLoanItem() != null &&
-                    loanItemId.equals(item.getLoanItem().getId())) {
+            if (loanItemId.equals(item.getLoanItem().getId())) {
                 existing = item;
                 break;
             }
@@ -90,7 +88,7 @@ public class ReturnItemController extends HttpServlet {
         if (existing != null) {
             returnItems.remove(existing);
         } else {
-            // ... (Phần thêm mới) ...
+
             ReturnItem newReturn = new ReturnItem();
             newReturn.setReturnDate(LocalDateTime.now());
 

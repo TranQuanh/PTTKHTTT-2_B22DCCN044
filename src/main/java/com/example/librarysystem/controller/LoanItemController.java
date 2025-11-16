@@ -56,18 +56,24 @@ public class LoanItemController extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
-        Reader reader = (Reader) session.getAttribute("reader");
+        Reader reader = (Reader) request.getAttribute("reader");
+
+
+        if (reader == null) {
+            reader = (Reader) session.getAttribute("reader");
+        }
 
         if (reader == null) {
             response.sendRedirect("staff/FindReader.jsp");
             return;
         }
 
+        session.setAttribute("reader", reader);
+
         String readerId = reader.getReaderId();
 
-        List<LoanItem> loanItems = loanItemDAO.getLoanItemsNotReturnedByReader(readerId);
+        List<LoanItem> loanItems = loanItemDAO.getLoanItemsByReader(readerId);
         session.setAttribute("currentLoanItems", loanItems);
-        request.setAttribute("loanItems", loanItems);
         request.getRequestDispatcher("staff/BorrowList.jsp").forward(request, response);
     }
 }

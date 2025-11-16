@@ -85,12 +85,7 @@ public class FineController extends HttpServlet {
             }
 
             LocalDateTime now = LocalDateTime.now();
-            log.info("Bắt đầu tính phạt trễ hạn cho {} bản trả sách.", returnItems.size());
-
             for (ReturnItem returnItem : returnItems) {
-                log.debug("=== Xử lý ReturnItem ID: {} ===", returnItem.getId());
-
-                // Loại bỏ phạt trễ hạn cũ trước khi tính toán lại
                 returnItem.setFineDetails(
                         returnItem.getFineDetails().stream()
                                 .filter(fd -> fd.getFine() == null || !"late".equals(fd.getFine().getType()))
@@ -98,15 +93,7 @@ public class FineController extends HttpServlet {
                 );
 
                 LoanItem loanItem = returnItem.getLoanItem();
-                if (loanItem == null) {
-                    log.warn("ReturnItem {} không có LoanItem → bỏ qua", returnItem.getId());
-                    continue;
-                }
 
-                if (loanItem.getDueDate() == null) {
-                    log.warn("LoanItem {} có dueDate = null → bỏ qua", loanItem.getId());
-                    continue;
-                }
 
                 if (now.isAfter(loanItem.getDueDate())) {
                     long daysLate = Duration.between(loanItem.getDueDate(), now).toDays();
@@ -117,7 +104,7 @@ public class FineController extends HttpServlet {
                         fineDetail.setId("FD-" + UUID.randomUUID().toString().substring(0, 8));
                         fineDetail.setFine(lateFine);
                         fineDetail.setQuantity((int) daysLate);
-                        fineDetail.setNote("Trễ hạn " + daysLate + " ngày");
+                        fineDetail.setNote("Late " + daysLate + " days");
                         returnItem.getFineDetails().add(fineDetail);
 
                         log.info("Đã thêm FineDetail [late] | Days: {}", daysLate);
@@ -142,63 +129,51 @@ public class FineController extends HttpServlet {
             throws ServletException, IOException {
 
         String loanItemId = request.getParameter("loanItemId");
-
         if (loanItemId == null) {
-            log.warn("Thiếu LoanItemId khi chọn Damage.");
             response.sendRedirect("staff/ReturnBasket.jsp");
             return;
         }
 
         HttpSession session = request.getSession();
-        Reader reader = (Reader) session.getAttribute("reader");
         List<ReturnItem> returnItems = (List<ReturnItem>) session.getAttribute("returnItems");
 
-        String bookTitle = "";
-
-        // 1. TÌM ReturnItem MỤC TIÊU và TẠO MAP TRUNG GIAN
         ReturnItem targetReturn = null;
-        Map<String, FineDetail> fineDetailsMap = new HashMap<>(); // ✅ MAP TRUNG GIAN
-
+        String bookTitle = "";
         if (returnItems != null) {
             targetReturn = returnItems.stream()
-                    .filter(item -> item.getLoanItem() != null && loanItemId.equals(item.getLoanItem().getId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (targetReturn != null) {
-                if (targetReturn.getLoanItem().getCopy() != null &&
-                        targetReturn.getLoanItem().getCopy().getDocument() != null) {
-                    bookTitle = targetReturn.getLoanItem().getCopy().getDocument().getTitle();
-                }
-
-                // ✅ Đổ dữ liệu FineDetails hiện có vào Map (Key: FineID, Value: FineDetail)
-                if (targetReturn.getFineDetails() != null) {
-                    targetReturn.getFineDetails().stream()
-                            .filter(fd -> fd.getFine() != null && !"late".equals(fd.getFine().getType())) // Chỉ lấy Fine Damage
-                            .forEach(fd -> fineDetailsMap.put(fd.getFine().getId(), fd));
-                }
+                    .filter(item -> loanItemId.equals(item.getLoanItem().getId()))
+                    .findFirst().orElse(null);
+            if (targetReturn != null && targetReturn.getLoanItem().getCopy() != null) {
+                bookTitle = targetReturn.getLoanItem().getCopy().getDocument().getTitle();
             }
         }
 
-        // 2. LƯU MAP TRUNG GIAN VÀO SESSION và REQUEST
-        session.setAttribute(CURRENT_FINE_DETAILS_KEY, fineDetailsMap);
-        request.setAttribute("currentFineDetailsMap", fineDetailsMap); // Dùng cho JSP
+
+        Set<String> selectedFineIds = new HashSet<>();
+        if (targetReturn != null && targetReturn.getFineDetails() != null) {
+            targetReturn.getFineDetails().stream()
+                    .filter(fd -> fd.getFine() != null && "damage".equals(fd.getFine().getType()))
+                    .forEach(fd -> selectedFineIds.add(fd.getFine().getId()));
+        }
 
         try {
             List<Fine> damageFines = fineDAO.getListDamageFine();
-            session.setAttribute(DAMAGE_FINES_SESSION_KEY, damageFines);
 
+            // LƯU VÀO SESSION (QUAN TRỌNG!)
+            session.setAttribute("damageFines", damageFines);
+            session.setAttribute("selectedDamageFineIds", selectedFineIds);
+
+            // VẪN LƯU VÀO REQUEST ĐỂ JSP DÙNG
             request.setAttribute("damageFines", damageFines);
+            request.setAttribute("selectedFineIds", selectedFineIds);
             request.setAttribute("targetLoanItemId", loanItemId);
-            request.setAttribute("reader", reader);
             request.setAttribute("bookTitle", bookTitle);
-
-            log.info("Lấy {} loại phạt Damage cho LoanItem {}. FineDetail Map size: {}", damageFines.size(), loanItemId, fineDetailsMap.size());
+            request.setAttribute("reader", session.getAttribute("reader"));
 
             request.getRequestDispatcher("staff/DamageFine.jsp").forward(request, response);
         } catch (Exception e) {
-            log.error("Lỗi khi lấy danh sách phạt Damage", e);
-            request.setAttribute("error", "Đã xảy ra lỗi hệ thống khi lấy danh sách phạt hư hỏng!");
+            log.error("Lỗi lấy danh sách phạt hư hỏng", e);
+            request.setAttribute("error", "Lỗi hệ thống!");
             request.getRequestDispatcher("staff/ReturnBasket.jsp").forward(request, response);
         }
     }
@@ -206,99 +181,84 @@ public class FineController extends HttpServlet {
     private void chooseDamageFine(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        HttpSession session = request.getSession();
-
         String loanItemId = request.getParameter("loanItemId");
         String fineId = request.getParameter("fineId");
-        String quantityStr = request.getParameter("quantity");
-
-        // ... (Kiểm tra Quantity và Tham số giữ nguyên) ...
-        int quantity;
-        try {
-            quantity = Integer.parseInt(quantityStr);
-            if (quantity <= 0) throw new NumberFormatException();
-        } catch (Exception e) {
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Quantity phải là số nguyên dương.\" }");
-            log.warn("Lỗi Quantity (fineId: {}, qty: {})", fineId, quantityStr);
-            return;
-        }
 
         if (loanItemId == null || fineId == null) {
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Thiếu tham số (loanItemId hoặc fineId).\"}");
+            log.error("Thiếu tham số: loanItemId={}, fineId={}", loanItemId, fineId);
+            sendJsonError(response, "Thiếu tham số!");
             return;
         }
 
-        // 1. Lấy dữ liệu từ SESSION
-        List<Fine> damageFines = (List<Fine>) session.getAttribute(DAMAGE_FINES_SESSION_KEY);
-        Map<String, FineDetail> fineDetailsMap = (Map<String, FineDetail>) session.getAttribute(CURRENT_FINE_DETAILS_KEY); // ✅ Lấy Map
+        HttpSession session = request.getSession();
         List<ReturnItem> returnItems = (List<ReturnItem>) session.getAttribute("returnItems");
+        Set<String> selectedFineIds = (Set<String>) session.getAttribute("selectedDamageFineIds");
+        List<Fine> damageFines = (List<Fine>) session.getAttribute("damageFines");
 
-        if (fineDetailsMap == null || returnItems == null || damageFines == null) {
-            log.error("Thiếu dữ liệu Fine/ReturnItem/Map trong Session.");
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Thiếu dữ liệu phiên. Vui lòng tải lại trang.\" }");
+
+
+
+        log.info("Tìm ReturnItem với loanItemId={}", loanItemId);
+        ReturnItem targetReturn = returnItems.stream()
+                .filter(item -> item.getLoanItem() != null && loanItemId.equals(item.getLoanItem().getId()))
+                .findFirst()
+                .orElse(null);
+
+        if (targetReturn == null) {
+            log.error("Không tìm thấy ReturnItem với loanItemId={}", loanItemId);
+            sendJsonError(response, "Không tìm thấy sách trả!");
             return;
         }
 
-        // 2. Tìm Fine object từ Session
-        Optional<Fine> optFine = damageFines.stream()
-                .filter(f -> Objects.equals(f.getId(), fineId))
-                .findFirst();
+        log.info("Tìm Fine với fineId={}", fineId);
+        Fine fine = damageFines.stream()
+                .filter(f -> fineId.equals(f.getId()))
+                .findFirst()
+                .orElse(null);
 
-        if (!optFine.isPresent()) {
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Không tìm thấy Fine ID trong danh sách session.\" }");
+        if (fine == null) {
+            log.error("Không tìm thấy Fine với fineId={}", fineId);
+            sendJsonError(response, "Phạt không tồn tại!");
             return;
         }
-        Fine fine = optFine.get();
 
-        // 3. Xử lý Thêm/Xóa trong Map
-        if (fineDetailsMap.containsKey(fineId)) {
-            // HÀNH ĐỘNG 1: BỎ CHỌN (Xóa khỏi Map)
-            fineDetailsMap.remove(fineId);
-            log.info("Đã BỎ CHỌN Fine: {} khỏi Map.", fineId);
+
+        List<FineDetail> currentDetails = targetReturn.getFineDetails();
+        if (currentDetails == null) {
+            currentDetails = new ArrayList<>();
+            log.info("Khởi tạo FineDetail list mới cho ReturnItem");
+        }
+
+
+        boolean isSelected = currentDetails.stream()
+                .anyMatch(fd -> fd.getFine() != null && fineId.equals(fd.getFine().getId()));
+
+        if (isSelected) {
+            log.info("BỎ CHỌN fineId: {}", fineId);
+            currentDetails.removeIf(fd -> fineId.equals(fd.getFine().getId()));
+            selectedFineIds.remove(fineId);
         } else {
-            // HÀNH ĐỘNG 2: CHỌN (Thêm vào Map)
-            FineDetail newFineDetail = new FineDetail();
-            newFineDetail.setId("FD-" + UUID.randomUUID().toString().substring(0, 8)); // Tạo ID mới
-            newFineDetail.setFine(fine);
-            newFineDetail.setQuantity(quantity);
-            newFineDetail.setNote("Phạt hư hỏng sách: " + fine.getReason() + " (x" + quantity + ")");
-
-            fineDetailsMap.put(fineId, newFineDetail);
-            log.info("Đã CHỌN Fine: {} vào Map với Qty: {}", fineId, quantity);
+            log.info("CHỌN fineId: {}", fineId);
+            FineDetail newDetail = new FineDetail();
+            newDetail.setFine(fine);
+            newDetail.setNote("Damage Fine: " + fine.getReason());
+            currentDetails.add(newDetail);
+            selectedFineIds.add(fineId);
         }
 
-        // 4. ĐỒNG BỘ NGƯỢC LẠI vào ReturnItem chính (RẤT QUAN TRỌNG)
-        Optional<ReturnItem> optReturnItem = returnItems.stream()
-                .filter(item -> item.getLoanItem() != null && Objects.equals(item.getLoanItem().getId(), loanItemId))
-                .findFirst();
+        targetReturn.setFineDetails(currentDetails);
+        session.setAttribute("returnItems", returnItems);
+        session.setAttribute("selectedDamageFineIds", selectedFineIds);
 
-        if (optReturnItem.isPresent()) {
-            ReturnItem returnItem = optReturnItem.get();
-
-            // Lấy các FineDetails không phải Damage (ví dụ: late fine)
-            List<FineDetail> nonDamageFines = returnItem.getFineDetails().stream()
-                    .filter(fd -> fd.getFine() != null && "late".equals(fd.getFine().getType()))
-                    .collect(Collectors.toList());
-
-            // Thêm tất cả các FineDetails Damage mới từ Map vào
-            nonDamageFines.addAll(fineDetailsMap.values());
-
-            returnItem.setFineDetails(nonDamageFines); // Ghi đè danh sách chi tiết phạt
-        }
-
-        // 5. Cập nhật Session và Phản hồi
-        session.setAttribute(CURRENT_FINE_DETAILS_KEY, fineDetailsMap); // Cập nhật Map trong session
-        session.setAttribute("returnItems", returnItems); // Cập nhật ReturnItems chính
 
         response.setContentType("application/json");
         response.getWriter().write("{\"status\":\"ok\"}");
+
+        log.info("=== chooseDamageFine HOÀN TẤT ===");
+    }
+    private void sendJsonError(HttpServletResponse response, String message) throws IOException {
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.getWriter().write("{\"status\":\"error\", \"message\":\"" + message + "\"}");
     }
 }

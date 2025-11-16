@@ -30,12 +30,12 @@ public class ReaderDAO {
             stmt.setString(1, reader.getUsername());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    errors.put("username", "Username này đã tồn tại");
+                    errors.put("username", "Username is exist");
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            errors.put("database", "Lỗi truy vấn username");
+            errors.put("database", "Error query username");
         }
 
         // Check email
@@ -44,12 +44,12 @@ public class ReaderDAO {
             stmt.setString(1, reader.getEmail());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    errors.put("email", "Email này đã được dùng để đăng ký");
+                    errors.put("email", "Email is used");
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            errors.put("database", "Lỗi truy vấn email");
+            errors.put("database", "query email error");
         }
 
         return errors;
@@ -69,15 +69,17 @@ public class ReaderDAO {
 
         try {
             conn = this.connection;
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
 
-            // Tạo ID random
-            String memberId = "MB-" + UUID.randomUUID().toString().substring(0, 8);
-            String readerId = "RD-" + UUID.randomUUID().toString().substring(0, 8);
+            String memberId = "MB-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            String readerId = "RD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
+            // Lưu readerId vào đối tượng Reader (để dùng sau)
+            reader.setReaderId(readerId);
 
             String fullName = reader.getFullName().trim();
 
-            // Insert Member
+            // INSERT MEMBER
             psMember = conn.prepareStatement(insertMemberSQL);
             psMember.setString(1, memberId);
             psMember.setString(2, reader.getUsername());
@@ -91,9 +93,9 @@ public class ReaderDAO {
             psMember.setString(10, fullName);
             psMember.executeUpdate();
 
-            // Insert Reader
+            // INSERT READER
             LocalDate validFrom = LocalDate.now();
-            LocalDate validTo   = validFrom.plusYears(1);
+            LocalDate validTo = validFrom.plusYears(1);
             String qrCode = UUID.randomUUID().toString();
 
             psReader = conn.prepareStatement(insertReaderSQL);
@@ -118,7 +120,7 @@ public class ReaderDAO {
             try {
                 if (psMember != null) psMember.close();
                 if (psReader != null) psReader.close();
-                conn.setAutoCommit(true);
+                if (conn != null) conn.setAutoCommit(true);
             } catch (Exception ignored) {}
         }
     }
@@ -134,6 +136,32 @@ public class ReaderDAO {
                     reader.setReaderId(rs.getString("readerid"));
                     reader.setFullName(rs.getString("fullname"));
                     reader.setStatus(rs.getString("status"));
+                    return reader;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public Reader getReaderInfo(String readerId) {
+        String sql = "SELECT r.readerid, r.qrcode, m.fullname, m.username, m.password " +
+                "FROM tblReader r " +
+                "JOIN tblMember m ON r.memberid = m.memberid " +
+                "WHERE r.readerid = ?";
+
+        try (Connection conn = this.connection;
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, readerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Reader reader = new Reader();
+                    reader.setReaderId(rs.getString("readerid"));
+                    reader.setQrCode(rs.getString("qrcode"));
+                    reader.setFullName(rs.getString("fullname"));
+                    reader.setUsername(rs.getString("username"));
+                    reader.setPassword(rs.getString("password"));
                     return reader;
                 }
             }

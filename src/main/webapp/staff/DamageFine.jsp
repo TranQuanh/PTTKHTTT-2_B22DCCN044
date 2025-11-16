@@ -1,238 +1,296 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Damage Option</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chọn Phạt Hư Hỏng</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS giữ nguyên từ file gốc */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f8fa;
-            margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #edf4fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
+
+        /* === BANNER NHỎ GỌN === */
+        .page-banner {
+            background: #0099cc;
+            color: white;
+            padding: 10px 24px;
+            text-align: center;
+            border-radius: 30px;
+            display: inline-block;
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0, 153, 204, 0.25);
+            margin: 16px auto 8px;
+            max-width: fit-content;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 16px;
+        }
+
         .container {
-            background-color: white;
-            padding: 25px 35px;
-            border: 1px solid #ccc;
+            background: #ffffff;
+            width: 920px;
+            max-width: 94vw;
+            padding: 16px 20px;
+            border-radius: 14px;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+            margin-bottom: 24px;
+        }
+
+        .container h3 {
+            margin: 0 0 12px;
+            color: #005b96;
+            font-size: 22px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* === READER + LOAN INFO – GIỐNG ReturnBasket === */
+        .info-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
             border-radius: 10px;
-            max-width: 950px;
-            margin: 50px auto;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 14.5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        h3 {
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+        .info-row .label {
+            font-weight: 600;
+            color: #333;
+            min-width: 70px;
+            margin-right: 12px;
+        }
+
+        .info-row .value {
+            color: #555;
+            min-width: 70px;
+            margin-right: 36px;
+        }
+
+
+        /* === BẢNG PHẠT HƯ HỎNG === */
+        .fine-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .fine-table th {
+            background-color: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+            padding: 12px 10px;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
+            border-bottom: 2px solid #dee2e6;
         }
-        .info-table { width: 100%; margin-bottom: 20px; font-size: 14px; }
-        .info-table th { width: 15%; text-align: right; padding-right: 10px; font-weight: bold; white-space: nowrap; }
-        .info-table td { width: 35%; padding-left: 10px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-        th { background-color: #f2f2f2; }
 
-        .col-fine-id { width: 8%; }
-        .col-type { width: 12%; }
-        .col-reason { width: 35%; }
-        .col-amount { width: 10%; }
-        .col-quantity { width: 10%; }
-        .col-actions { width: 15%; }
-
-        .choose-fine-btn {
-            padding: 5px 12px; border: none; border-radius: 4px;
-            background-color: #0099cc; color: white; cursor: pointer;
-            transition: background-color 0.25s;
-        }
-        .choose-fine-btn.selected { background-color: #dc3545; }
-
-        .quantity-input-data {
-            width: 40px;
+        .fine-table td {
+            padding: 10px 12px;
             text-align: center;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-        }
-        /* ✅ CSS MỚI: Dùng cho Quantity input bị khóa */
-        .quantity-input-data:disabled {
-            background-color: #eee;
-            cursor: not-allowed;
+            border-bottom: 1px solid #eee;
         }
 
-        .button-group { margin-top: 25px; overflow: auto; }
+        .fine-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .fine-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* === NÚT CHỌN === */
+        .choose-btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 78px;
+        }
+
+        .choose-btn:not(.selected) {
+            background-color: #0099cc;
+            color: white;
+        }
+
+        .choose-btn.selected {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .choose-btn:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        /* === NÚT HÀNH ĐỘNG === */
+        .button-group {
+            margin-top: 20px;
+            text-align: right;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
         .agree-btn {
-            padding: 10px 20px; border: none; border-radius: 5px;
-            background-color: #28a745; color: white; cursor: pointer;
-            float: right; margin-left: 10px;
+            background-color: #28a745;
+            color: white;
         }
+
         .back-btn {
-            padding: 10px 20px; border: none; border-radius: 5px;
-            background-color: #6c757d; color: white; cursor: pointer;
-            float: right;
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .agree-btn:hover { background-color: #218838; }
+        .back-btn:hover { background-color: #5a6268; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .info-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .info-row .label { min-width: auto; }
+
+            .container { padding: 12px 14px; }
+            .fine-table th, .fine-table td { padding: 8px 6px; font-size: 13px; }
+            .button-group { flex-direction: column; }
+            .btn { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-<jsp:include page="/common/header.jsp" />
+<!-- HEADER STAFF -->
+<jsp:include page="/common/header-staff-login.jsp" />
 
-<div class="container">
-    <h3>Damage Option</h3>
+<!-- BANNER NHỎ -->
+<div style="text-align: center;">
+    <div class="page-banner">
+        Reader Return Documents
+    </div>
+</div>
 
-    <c:if test="${not empty requestScope.error}">
-        <p style="color: red; text-align: center; font-weight: bold;">LỖI: ${requestScope.error}</p>
-    </c:if>
+<!-- NỘI DUNG CHÍNH -->
+<div class="main-content">
+    <div class="container">
+        <h3>Choose Damage Fine</h3>
 
-    <table class="info-table">
-        <tr>
-            <th>readerID:</th>
-            <td>${reader.readerId}</td>
-            <th>Reader Name:</th>
-            <td>${reader.fullName}</td>
-        </tr>
-        <tr>
-            <th>LoanId:</th>
-            <td>${targetLoanItemId}</td>
-            <th>BookTitle:</th>
-            <td>${bookTitle}</td>
-        </tr>
-    </table>
+        <!-- READER + LOAN INFO – GIỐNG ReturnBasket -->
+        <div class="info-card">
+            <div class="info-row">
+                <span class="label">Reader ID:</span>
+                <span class="value">${reader.readerId}</span>
+                <span class="label">Full Name:</span>
+                <span class="value">${reader.fullName}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Loan ID:</span>
+                <span class="value">${targetLoanItemId}</span>
+                <span class="separator"></span>
+                <span class="label">Book title:</span>
+                <span class="value">${bookTitle}</span>
+            </div>
+        </div>
 
-    <table id="damage-fines-table">
-        <thead>
-        <tr>
-            <th class="col-fine-id">Fine ID</th>
-            <th class="col-type">Type</th>
-            <th class="col-reason">Reason</th>
-            <th class="col-amount">Amount</th>
-            <th class="col-quantity">Quantity</th>
-            <th class="col-actions">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-    <c:if test="${empty damageFines}">
-        <tr>
-            <td colspan="6">Không có loại phạt hư hỏng nào được cấu hình.</td>
-        </tr>
-    </c:if>
-
-    <c:forEach var="fine" items="${damageFines}">
-        <%-- ✅ KIỂM TRA ĐIỀU KIỆN: Chỉ render nếu Fine ID KHÔNG RỖNG --%>
-        <c:if test="${not empty fine.id}">
-
-            <c:set var="fineDetailObj" value="${currentFineDetailsMap[fine.id]}"/>
-            <c:set var="isChosen" value="${not empty fineDetailObj}"/>
-            <c:set var="currentQuantity" value="${isChosen ? fineDetailObj.quantity : 1}"/>
-
-            <c:set var="safeFineId">
-                <c:out value="${fine.id}" escapeXml="true" />
-            </c:set>
-
-            <tr id="row-${safeFineId}"
-                data-fine-id="${safeFineId}"
-                data-chosen="${isChosen}">
-                <td class="col-fine-id">${safeFineId}</td>
-                <td class="col-type">Damage Option</td>
-                <td class="col-reason">${fine.reason}</td>
-                <td class="col-amount">${fine.amount}</td>
-
-                <td class="col-quantity">
-                    <input type="number"
-                           id="qty-input-${safeFineId}"
-                           value="${currentQuantity}"
-                           min="1"
-                           class="quantity-input-data"
-                           required
-                        ${isChosen ? 'disabled' : ''}>
-                </td>
-
-                <td class="col-actions">
-                    <button class="choose-fine-btn ${isChosen ? 'selected' : ''}"
-                            onclick="toggleFine(this, '${safeFineId}', '${targetLoanItemId}')">
-                            ${isChosen ? 'Bỏ chọn' : 'Chọn'}
-                    </button>
-                </td>
+        <!-- BẢNG PHẠT HƯ HỎNG -->
+        <table class="fine-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>reason</th>
+                <th>amount</th>
+                <th>Action</th>
             </tr>
-        </c:if>
-        <%-- Kết thúc thẻ c:if cho kiểm tra ID --%>
-    </c:forEach>
-    </tbody>
-    </table>
+            </thead>
+            <tbody>
+            <c:forEach var="fine" items="${damageFines}">
+                <c:set var="isSelected" value="${selectedFineIds.contains(fine.id)}"/>
+                <tr>
+                    <td>${fine.id}</td>
+                    <td>${fine.reason}</td>
+                    <td><fmt:formatNumber value="${fine.amount}" type="number" maxFractionDigits="0"/> VND</td>
+                    <td>
+                        <button class="choose-btn ${isSelected ? 'selected' : ''}"
+                                onclick="toggleFine('${fine.id}', '${targetLoanItemId}', this)">
+                                ${isSelected ? 'Bỏ chọn' : 'Chọn'}
+                        </button>
+                    </td>
+                </tr>
+            </c:forEach>
+            </tbody>
+        </table>
 
-    <div class="button-group">
-        <button class="agree-btn" onclick="redirectToLateFine()">
-            Đồng ý
-        </button>
-        <button class="back-btn" onclick="window.location.href='${pageContext.request.contextPath}/fine?action=calculateLateFine'">
-            Back
-        </button>
+        <!-- NÚT HÀNH ĐỘNG -->
+        <div class="button-group">
+
+            <button class="btn agree-btn" onclick="saveAndNext()">Continue</button>
+        </div>
     </div>
 </div>
 
 <script>
-    function toggleFine(button, fineId, loanItemId) {
-
-        // ✅ Sửa lỗi: Chỉ dùng phép nối chuỗi (+) cho biến JS cục bộ
-        const qtyInput = document.getElementById('qty-input-' + fineId);
-        if (!qtyInput) {
-            alert("LỖI: Không tìm thấy input Quantity với ID: qty-input-" + fineId + ". Vui lòng kiểm tra dữ liệu Fine ID.");
-            return;
-        }
-
-        // Đọc quantity (chỉ đọc được nếu không bị disabled)
-        const quantity = parseInt(qtyInput.value);
-        if (isNaN(quantity) || quantity <= 0) {
-            alert("Số lượng phải là số nguyên dương (> 0).");
-            return;
-        }
-
-        // ✅ Sửa lỗi: Chỉ dùng phép nối chuỗi (+) cho URL
-        let url = '${pageContext.request.contextPath}/fine?action=chooseDamageFine'
-            + '&fineId=' + fineId
-            + '&loanItemId=' + loanItemId
-            + '&quantity=' + quantity;
+    function toggleFine(fineId, loanItemId, button) {
+        const url = '${pageContext.request.contextPath}/fine?action=chooseDamageFine&fineId=' + fineId + '&loanItemId=' + loanItemId;
 
         fetch(url, { method: 'POST' })
-            .then(res => {
-                if (!res.ok) {
-                    return res.json().then(data => {
-                        throw new Error(data.message || res.statusText);
-                    });
-                }
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
-
-                // 1. Toggle class và text
-                button.classList.toggle('selected');
-                const isSelected = button.classList.contains('selected');
-                button.textContent = isSelected ? 'Bỏ chọn' : 'Chọn';
-
-                // 2. KHÓA HOẶC MỞ KHÓA INPUT QUANTITY
-                // isSelected = true (Vừa CHỌN) => disabled = true (Khóa)
-                // isSelected = false (Vừa BỎ CHỌN) => disabled = false (Mở khóa)
-                qtyInput.disabled = isSelected;
-
-                // 3. Reset Quantity về 1 khi hủy (Chỉ thực hiện khi bỏ chọn)
-                if (!isSelected) {
-                    qtyInput.value = '1';
+                if (data.status === 'ok') {
+                    button.classList.toggle('selected');
+                    button.textContent = button.classList.contains('selected') ? 'Bỏ chọn' : 'Chọn';
+                } else {
+                    alert('Lỗi: ' + (data.message || 'Không thể cập nhật'));
                 }
-
-                // 4. Cập nhật data-chosen
-                const row = button.closest('tr');
-                row.setAttribute('data-chosen', isSelected ? 'true' : 'false');
-                console.log('Damage Fine ID ' + fineId + ' đã được ' + (isSelected ? 'CHỌN' : 'BỎ CHỌN') + '.');
-
             })
             .catch(err => {
-                console.error('Toggle Fine error:', err);
-                alert('Lỗi khi cập nhật phạt: ' + err.message);
+                console.error('Lỗi kết nối:', err);
+                alert('Lỗi kết nối mạng. Vui lòng thử lại.');
             });
     }
 
-    function redirectToLateFine() {
-        window.location.href = '${pageContext.request.contextPath}/fine?action=calculateLateFine';
+    function saveAndNext() {
+        window.location.href = '${pageContext.request.contextPath}/staff/ReturnBasket.jsp';
     }
 </script>
 

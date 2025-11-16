@@ -19,36 +19,38 @@ public class ReturnInvoiceDAO {
         this.connection = connection;
     }
 
-    /**
-     * Tạo và lưu trữ toàn bộ Hóa đơn trả sách, bao gồm ReturnItems và FineDetails liên quan.
-     * Transaction đảm bảo tính toàn vẹn dữ liệu.
-     *
-     * @param invoice Đối tượng ReturnInvoice đã được đóng gói đầy đủ dữ liệu.
-     * @param staffId ID của nhân viên thực hiện giao dịch (dùng cho bảng ReturnInvoice).
-     * @return true nếu giao dịch thành công, ngược lại false.
-     * @throws SQLException Nếu có lỗi SQL.
-     */
-    public boolean createReturnInvoice(ReturnInvoice invoice, String staffId) throws SQLException {
 
+    public boolean createReturnInvoice(ReturnInvoice invoice) throws SQLException {
 
-        String INSERT_INVOICE = "INSERT INTO tblReturnInvoice (id, readerid, staffid) VALUES (?, ?, ?)";
+        // Lấy StaffId từ đối tượng Invoice
+        String staffId = null;
+        if (invoice.getStaff() != null) {
+            staffId = invoice.getStaff().getStaffId();
+        }
 
+        if (staffId == null) {
+            log.error("Lỗi: Không thể lấy StaffId từ đối tượng ReturnInvoice.");
+            // Giả định bạn muốn trả về false nếu thiếu dữ liệu quan trọng
+            return false;
+        }
+
+        String INSERT_INVOICE = "INSERT INTO tblReturnInvoice (id, readerid, staffid, status) VALUES (?, ?, ?, 'UNPAID')";
         String INSERT_RETURN_ITEM = "INSERT INTO tblReturnItem (id, returninvoiceid, loanitemid, returndate) VALUES (?, ?, ?, ?)";
-
-        String INSERT_FINE_DETAIL = "INSERT INTO tblFineDetail (id, fineid, returnitemid, note, quantity) VALUES (?, ?, ?, ?, ?)";
+        // ✅ ĐÃ SỬA: BỎ CỘT 'quantity' KHỎI CÂU LỆNH INSERT
+        String INSERT_FINE_DETAIL = "INSERT INTO tblFineDetail (id, fineid, returnitemid, note) VALUES (?, ?, ?, ?)";
 
         boolean success = false;
         String invoiceId = "RI-" + UUID.randomUUID().toString().substring(0, 8);
+        invoice.setId(invoiceId);
 
         try {
             connection.setAutoCommit(false);
 
-            // --- 2. INSERT VÀO BẢNG ReturnInvoice (Chỉ 3 cột) ---
+            // --- 2. INSERT VÀO BẢNG ReturnInvoice ---
             try (PreparedStatement psInvoice = connection.prepareStatement(INSERT_INVOICE)) {
-
                 psInvoice.setString(1, invoiceId);
-                psInvoice.setString(2, invoice.getReader().getReaderId()); // Readerid
-                psInvoice.setString(3, staffId); // Staffid
+                psInvoice.setString(2, invoice.getReader().getReaderId());
+                psInvoice.setString(3, staffId);
 
                 if (psInvoice.executeUpdate() == 0) {
                     throw new SQLException("Thêm ReturnInvoice thất bại.");
@@ -62,11 +64,10 @@ public class ReturnInvoiceDAO {
 
                 // a. INSERT vào BẢNG ReturnItem
                 try (PreparedStatement psReturnItem = connection.prepareStatement(INSERT_RETURN_ITEM)) {
-
                     psReturnItem.setString(1, returnItemId);
-                    psReturnItem.setString(2, invoiceId); // ReturnInvoiceid
-                    psReturnItem.setString(3, item.getLoanItem().getId()); // LoanItemid
-                    psReturnItem.setTimestamp(4, Timestamp.valueOf(item.getReturnDate())); // returnDate
+                    psReturnItem.setString(2, invoiceId);
+                    psReturnItem.setString(3, item.getLoanItem().getId());
+                    psReturnItem.setTimestamp(4, Timestamp.valueOf(item.getReturnDate()));
 
                     if (psReturnItem.executeUpdate() == 0) {
                         throw new SQLException("Thêm ReturnItem thất bại: " + item.getLoanItem().getId());
@@ -83,7 +84,7 @@ public class ReturnInvoiceDAO {
                             psFineDetail.setString(2, fd.getFine().getId()); // Fineid
                             psFineDetail.setString(3, returnItemId); // ReturnItemid
                             psFineDetail.setString(4, fd.getNote()); // note
-                            psFineDetail.setInt(5, fd.getQuantity()); // quantity
+                            // ✅ ĐÃ BỎ: psFineDetail.setInt(5, fd.getQuantity());
 
                             if (psFineDetail.executeUpdate() == 0) {
                                 throw new SQLException("Thêm FineDetail thất bại: " + fd.getFine().getId());
@@ -94,7 +95,6 @@ public class ReturnInvoiceDAO {
                 }
             }
 
-            // 4. CAM KẾT VÀ HOÀN TẤT TRANSACTION
             connection.commit();
             success = true;
             log.info("Transaction tạo hóa đơn {} hoàn tất thành công.", invoiceId);
@@ -117,5 +117,19 @@ public class ReturnInvoiceDAO {
         }
 
         return success;
+    }
+    public boolean updateStatus(String invoiceId) {
+        String SQL = "UPDATE tblReturnInvoice SET status = 'PAID' WHERE id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(SQL)) {
+            ps.setString(1, invoiceId);
+
+            int rows = ps.executeUpdate();
+            return rows > 0;
+
+        } catch (SQLException e) {
+            log.error("Lỗi cập nhật status cho invoice {} -> {}", invoiceId, e);
+            return false;
+        }
     }
 }
